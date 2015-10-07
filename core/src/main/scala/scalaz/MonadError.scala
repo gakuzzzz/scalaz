@@ -11,6 +11,9 @@ trait MonadError[F[_, _], S] extends Monad[F[S, ?]] { self =>
   def raiseError[A](e: S): F[S, A]
   def handleError[A](fa: F[S, A])(f: S => F[S, A]): F[S, A]
 
+  def filterWith[A](fa: F[S, A])(e: S)(f: A => Boolean): F[S, A] =
+    bind(fa)(a => if (f(a)) fa else raiseError(e))
+
   trait MonadErrorLaw {
     def raisedErrorsHandled[A](e: S, f: S => F[S, A])(implicit FEA: Equal[F[S, A]]): Boolean =
       FEA.equal(handleError(raiseError(e))(f), f(e))
